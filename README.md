@@ -1,109 +1,56 @@
+# WatchDog-Chakravyuh
 
-🛡️ WatchDog-Chakravyuh  
-Reverse OSINT-based awareness platform for CHAKRAVYUH 1.0
+WatchDog is a local email breach-awareness application. It checks an email address against the Have I Been Pwned (HIBP) breach API when an API key is configured, then displays a simple rule-based indicator and recommendations.
 
-WatchDog-Chakravyuh is a privacy-focused email breach detection and risk analysis tool** built using **Reverse OSINT technique.  
-It helps users understand where their email is exposed**, **what kind of data can be extracted**, and **how risky their digital footprint is.
+The app does not search account-registration endpoints, does not collect passwords, and does not store scan results. Only check an email address you own or have permission to check.
 
-This project is developed as part of CHAKRAVYUH 1.0 Hackathon.
+## Requirements
 
+- Node.js 18 or later
+- A Have I Been Pwned API key to perform live breach checks. Without a key, the app still runs but clearly reports that breach data was not checked.
 
-🚀 Key Features
+## Run on Windows
 
+Open PowerShell in the project directory.
 
-- 🌐Platform Visibility
-  - Shows on which platforms the email may be registered.
-- 📊Risk Analysis
-  - Calculates a risk score (Low / Medium / High) based on exposure.
-- 🤖AI-Based Explanation
-  - Provides easy-to-understand explanations and security recommendations.
-- 🔐Privacy-First
-  - No passwords collected.
-  - No data stored permanently.
+1. Install backend dependencies:
 
----
+   ```powershell
+   cd backend
+   npm install
+   ```
 
-🧠 How It Works (Reverse OSINT)
+2. Configure the optional breach-data API key:
 
-1. User enters an email address.
-2. OSINT services analyze publicly available data.
-3. Platforms and breach indicators are detected.
-4. Risk score is calculated using predefined logic.
-5. AI module explains:
-   - What data could be exposed
-   - What an attacker might infer
-   - How the user can protect themselves
+   ```powershell
+   Copy-Item .env.example .env
+   ```
 
-🛠️ Tech Stack
+   Edit `backend\.env` and set `HIBP_API_KEY` to your own key. Do not put the key in frontend code or commit `.env`.
 
-Frontend
-- HTML
-- CSS
-- JavaScript
+3. Start the backend and leave this window open:
 
-Backend
-- Node.js
-- Express.js
+   ```powershell
+   npm start
+   ```
 
-OSINT
-- Custom Python scripts
-- Email enumeration logic
+   It should say that it is listening at `http://localhost:5000`.
 
-AI Layer
-- Rule-based risk explanation
-- AI module designed for future extensibility
+4. In a second PowerShell window, start the frontend:
 
+   ```powershell
+   cd "C:\Users\HP\Downloads\WatchDog_Chakravyuh-main\WatchDog_Chakravyuh-main\frontend"
+   py -m http.server 8000
+   ```
 
-▶️ How to Run the Project
+5. Open `http://localhost:8000` in your browser. Enter an email you own or are authorized to check, tick the consent box, and submit.
 
- 1️⃣ Clone the repository
-```bash
-git clone https://github.com/ankeeta-mohanty/table27_TECH-DIAMOND.git
-cd WatchDog-Chakravyuh
+6. To verify the backend independently, visit `http://localhost:5000/api/health`. The response reports whether a HIBP key is configured.
 
-2️⃣ Install backend dependencies
+The Python/Holehe service is not required. This app intentionally does not perform account-registration enumeration. Its breach results come only from the configured HIBP API; an unconfigured or unavailable provider is shown as unknown, not as “no breaches.”
 
-cd backend
-npm install
+## Notes
 
-3️⃣ Start the backend server
-
-node server.js
-
-4️⃣ Open frontend
-
-Open frontend/index.html in your browser
-OR
-
-Use Live Server (recommended)
-
-
-
-
-⚠️ Disclaimer
-
-This tool is created for educational and security awareness purposes only.
-It does not perform hacking or illegal data access.
-All analysis is based on publicly available information.
-
-
-
-👥 Team
-Gayatri Rout
-Rachita Das
-Ankeeta Mohanty
-
-Team TECH-DIAMOND
-
-
-
-Event: CHAKRAVYUH 1.0
-
-Category: / OSINT 
-
-Project Name: WatchDog-Chakravyuh
-
-
-
-
-✨ Know who’s watching you. Secure yourself before attackers do.
+- The score is a basic indicator based on returned breach records, not a complete security assessment.
+- HIBP may impose access, subscription, or rate limits. If a lookup fails, check the backend terminal and your API-key setup.
+- Scan requests are not logged with the email address, and results are not persisted by this application.

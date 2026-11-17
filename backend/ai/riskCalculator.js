@@ -5,7 +5,7 @@
  *
  * - Deterministic (no AI)
  * - Platform sensitivity based
- * - Breach-aware (internal use only)
+ * - Uses only breach records returned by the configured source
  */
 
 /* -------------------- Platform Categories -------------------- */
@@ -59,7 +59,7 @@ function calculateRisk({ platforms = [], breaches = [] }) {
     }
   });
 
-  // Breach-based scoring (internal only)
+  // This is a simple indicator, not a complete exposure assessment.
   if (breaches.length > 0) {
     score += 25;
     if (breaches.length >= 3) score += 10;

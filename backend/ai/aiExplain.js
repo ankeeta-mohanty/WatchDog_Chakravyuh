@@ -1,117 +1,38 @@
-/**
- * aiExplain.js
- * ------------
- * AI explanation & recommendation layer for WatchDog
- * Uses Hugging Face Inference API (FREE)
- */
+function aiExplain({ breaches, breachLookupStatus, riskLevel }) {
+  if (breachLookupStatus !== "available") {
+    return {
+      explanation:
+        "A breach check could not be completed, so this report cannot determine your breach exposure or assign a reliable risk score. Configure the official breach-data API to enable this check.",
+      recommendations: [
+        "Use a unique password for every account",
+        "Enable two-factor authentication on important accounts",
+        "Check the provider's account security page directly"
+      ],
+      aiModel: "Rule-based guidance"
+    };
+  }
 
-if (!process.env.HF_API_KEY) {
+  const explanation = breaches.length
+    ? `The breach database returned ${breaches.length} known breach record${breaches.length === 1 ? "" : "s"} for this email. This indicator is based only on the checked breach source and does not represent every kind of online exposure.`
+    : "The checked breach database returned no known breach records for this email. This is not a guarantee that the address has never been exposed elsewhere.";
+
+  const recommendations = breaches.length
+    ? [
+        "Change reused passwords on affected accounts",
+        "Enable two-factor authentication, especially on your email account",
+        "Be alert for targeted phishing messages"
+      ]
+    : [
+        "Continue using unique passwords for each account",
+        "Enable two-factor authentication on important accounts",
+        "Stay alert for unexpected password-reset or sign-in messages"
+      ];
+
   return {
-    explanation: "AI explanation unavailable (API key missing).",
-    recommendations: [
-      "Use strong passwords",
-      "Enable two-factor authentication",
-      "Monitor account activity"
-    ],
-    aiModel: "Fallback"
+    explanation: `${explanation} The source-based indicator is ${riskLevel.toLowerCase()}.`,
+    recommendations,
+    aiModel: "Rule-based guidance"
   };
-}
-
-const fetch = require("node-fetch");
-const HF_API_KEY = process.env.HF_API_KEY;
-const HF_MODEL = "mistralai/Mistral-7B-Instruct-v0.2";
-const HF_ENDPOINT = `https://api-inference.huggingface.co/models/${HF_MODEL}`;
-
-if (!HF_API_KEY) {
-  console.warn("⚠️ HF_API_KEY not found. AI explanations will fail.");
-}
-
-async function aiExplain({
-  email,
-  platforms,
-  breaches,
-  riskScore,
-  riskLevel
-}) {
-  const prompt = `
-You are a cybersecurity assistant for an OSINT-based email exposure analysis tool.
-
-Context:
-- Risk score and risk level are already calculated.
-- You ONLY explain and recommend.
-
-Email:
-${email}
-
-Platforms found (${platforms.length}):
-${platforms.length ? platforms.join(", ") : "None"}
-
-Historical breach signals (internal only):
-${breaches.length ? "Present" : "None"}
-
-Risk Score: ${riskScore}
-Risk Level: ${riskLevel}
-
-Tasks:
-1. Explain why the risk level is ${riskLevel}.
-2. Explain what attackers could infer.
-3. Give 3–5 practical recommendations.
-
-Rules:
-- Do NOT change the score or level
-- Do NOT mention breach names
-- Calm, educational tone
-- Return ONLY valid JSON:
-
-{
-  "explanation": "2–3 sentences",
-  "recommendations": [
-    "rec 1",
-    "rec 2",
-    "rec 3"
-  ]
-}
-`;
-
-  const response = await fetch(HF_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${HF_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      inputs: prompt,
-      parameters: {
-        max_new_tokens: 300,
-        temperature: 0.4,
-        return_full_text: false
-      }
-    })
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`HF API Error: ${errorText}`);
-  }
-
-  const data = await response.json();
-
-  // Hugging Face returns generated text inside array
-  const rawText =
-    Array.isArray(data) && data[0]?.generated_text
-      ? data[0].generated_text
-      : "";
-
-  // Extract JSON safely
-  const jsonStart = rawText.indexOf("{");
-  const jsonEnd = rawText.lastIndexOf("}");
-
-  if (jsonStart === -1 || jsonEnd === -1) {
-    throw new Error("AI response did not return valid JSON");
-  }
-
-  const jsonString = rawText.slice(jsonStart, jsonEnd + 1);
-  return JSON.parse(jsonString);
 }
 
 module.exports = { aiExplain };

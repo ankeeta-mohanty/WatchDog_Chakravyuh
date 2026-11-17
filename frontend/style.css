@@ -347,6 +347,12 @@ h1 {
     box-shadow: 0 0 30px rgba(16, 185, 129, 0.5);
 }
 
+.unknown-risk {
+    background-color: rgba(100, 116, 139, 0.2);
+    color: #cbd5e1;
+    border: 2px solid #64748b;
+}
+
 /* AI Explanation */
 .ai-explanation {
     background: linear-gradient(135deg, #1a1f2e 0%, #2d1b4e 100%);

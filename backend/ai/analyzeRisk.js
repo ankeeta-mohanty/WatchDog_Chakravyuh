@@ -1,40 +1,33 @@
-/**
- * analyzeRisk.js
- * --------------
- * Main orchestrator for WatchDog risk analysis
- *
- * Flow:
- * OSINT data → Rule-based risk calculation → AI explanation → Final response
- */
-
 const { calculateRisk } = require("./riskCalculator");
 const { aiExplain } = require("./aiExplain");
 
-async function analyzeRisk({ email, platforms = [], breaches = [] }) {
-  // 1️⃣ Rule-based risk calculation
-  const { riskScore, riskLevel } = calculateRisk({
-    platforms,
-    breaches
-  });
+function analyzeRisk({
+  email,
+  platforms = [],
+  breaches = [],
+  breachLookupStatus
+}) {
+  const analysisAvailable = breachLookupStatus === "available";
+  const { riskScore, riskLevel } = analysisAvailable
+    ? calculateRisk({ platforms, breaches })
+    : { riskScore: null, riskLevel: "UNKNOWN" };
 
-  // 2️⃣ AI explanation & recommendations
-  const aiResult = await aiExplain({
+  const explanation = aiExplain({
     email,
     platforms,
     breaches,
+    breachLookupStatus,
     riskScore,
     riskLevel
   });
 
-  // 3️⃣ Final frontend-ready response
   return {
-    email,
-    platformsFound: platforms.length,
-    platforms,
     riskScore,
     riskLevel,
-    explanation: aiResult.explanation,
-    recommendations: aiResult.recommendations
+    analysisAvailable,
+    explanation: explanation.explanation,
+    recommendations: explanation.recommendations,
+    aiModel: explanation.aiModel
   };
 }
 
